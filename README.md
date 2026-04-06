@@ -1,6 +1,6 @@
 # Email Triage Plugin for Claude
 
-<video src="screenshots/cowork--email-triage.mp4" width="100%" autoplay loop muted></video>
+![Demo: triaging emails in Cowork](screenshots/cowork--email-triage.mp4)
 
 Triage your support inbox from Claude. Pull unread emails, generate context-aware draft replies using your knowledge base, and review them in an interactive UI, ready for a human to copy, edit, and send.
 
@@ -18,8 +18,13 @@ Works in both **Claude Desktop (Cowork)** and **Claude Code (CLI)**. Everything 
 4. Select the **Personal** tab -> **+** -> **Add marketplace**
 5. Enter: `Context-Link/email-triage-plugin` -> Then click **+** once the **Email triage** skill has loaded
 
+<details>
+<summary>Screenshots</summary>
+
 ![Install marketplace](screenshots/cowork--install-marketplace.png)
 ![Add plugin from installed marketplace](screenshots/cowork--email-triage-add-plugin-from-installed-marketplace.png)
+
+</details>
 
 ### Claude Code (CLI)
 
@@ -29,7 +34,12 @@ Works in both **Claude Desktop (Cowork)** and **Claude Code (CLI)**. Everything 
 /reload-plugins 
 ```
 
+<details>
+<summary>Screenshot</summary>
+
 ![Claude Code email triage](screenshots/claude-code--email-triage.png)
+
+</details>
 
 Plugin source: [github.com/Context-Link/email-triage-plugin](https://github.com/Context-Link/email-triage-plugin)
 
@@ -43,7 +53,7 @@ Plugin source: [github.com/Context-Link/email-triage-plugin](https://github.com/
 4. **Review** — Drafts appear in an interactive UI with collapsible cards, copy buttons, and action checklists
 5. **Learn** — After you send the replies, paste back what you actually sent or tell Claude what to do differently. Lessons are saved to Context Link and used in future runs.
 
-<video src="screenshots/cowork--save-support-email-lesson.mp4" width="100%" autoplay loop muted></video>
+![Demo: saving a lesson from corrections](screenshots/cowork--save-support-email-lesson.mp4)
 
 In **Cowork**, the draft UI renders inline as an artifact. In **Claude Code**, it opens in your default browser.
 
@@ -85,7 +95,12 @@ This plugin uses [Context Link](https://context-link.ai) for two things: retriev
 2. Connect your support docs, website, and knowledge sources
 3. The plugin will automatically look up relevant context when drafting and save lessons when you provide feedback
 
+<details>
+<summary>Screenshot</summary>
+
 ![Context Link customer support context](screenshots/context-link--customer-support-context.png)
+
+</details>
 
 Without Context Link, the plugin still works. Replies are drafted from the email content alone, and lessons aren't persisted between sessions.
 
