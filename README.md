@@ -25,11 +25,14 @@ Works in both **Claude Desktop (Cowork)** and **Claude Code (CLI)**. Everything 
 4. Select the **Personal** tab -> **+** -> **Add marketplace**
 5. Enter: `Context-Link/email-triage-plugin` -> Then click **+** once the **Email triage** skill has loaded
 
+*Once you've been through one successful `/triage-email` and your sources are setup, you can add a recurring scheduled task (screenshot below)
+
 <details>
 <summary>Screenshots</summary>
 
 ![Install marketplace](screenshots/cowork--install-marketplace.png)
 ![Add plugin from installed marketplace](screenshots/cowork--email-triage-add-plugin-from-installed-marketplace.png)
+![Setting up scheduled email triage](screenshots/cowork--scheduled-task.png)
 
 </details>
 
