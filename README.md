@@ -143,6 +143,3 @@ This plugin uses the following MCP servers (configured in `.mcp.json`):
 - **Gmail** — Fetch and search emails via the Gmail MCP
 - **Zoho Mail** — Fetch and search emails via the Zoho MCP
 - **Context Link** — Retrieved via HTTP (no MCP server needed; uses the get-context skill)
-
-See [CONNECTORS.md](CONNECTORS.md) for tool-specific reference.
-# email-triage-plugin
