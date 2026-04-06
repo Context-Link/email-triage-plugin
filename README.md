@@ -90,7 +90,7 @@ Paste any customer email and run `/draft-reply`. The plugin looks up relevant co
 | `triage-email` | Orchestrates the full triage workflow: fetch, draft, display, learn |
 | `draft-email-response` | Generates a single context-aware draft reply with required actions |
 | `scrub` | Removes AI tells from draft text (filler phrases, watermarks, overly enthusiastic language) |
-| `get-context` | Retrieves product knowledge and support context from Context Link |
+| `get-context` | Retrieves relevant knowledge and past email context from Context Link |
 | `update-memory` | Saves learned lessons back to Context Link for future runs |
 
 ## Setup
