@@ -11,7 +11,7 @@
 
 **Triage your support inbox from Claude. Pull unread emails, generate context-aware draft replies using your knowledge base, and review them in an interactive UI, ready for a human to copy, edit, and send.**
 
-The plugin learns from your corrections over time. After each triage run, you can paste the replies you actually sent or give direct feedback. Lessons are stored in your [Context Link](https://www.context-link.ai) knowledge base and applied to future drafts automatically.
+The plugin learns from your corrections over time. After each triage run, you can paste the replies you actually sent or give direct feedback. Lessons are stored in your [Context Link](https://www.context-link.ai) knowledge base and applied to future drafts automatically. Don't use Context Link? No problem, the plugin can try to fall back to Claude's built-in memory to save and recall lessons between sessions.
 
 Works in both **Claude Desktop (Cowork)** and **Claude Code (CLI)**. Everything runs in the cloud (email fetching via Gmail or Zoho MCP, context retrieval via Context Link) so can be used outside of your local computer.
 
@@ -66,9 +66,9 @@ Plugin source: [github.com/Context-Link/email-triage-plugin](https://github.com/
 
 1. **Connect** — Choose Gmail or Zoho Mail, pick which email address to triage
 2. **Fetch** — Pull all unread emails from the last 24 hours (spam and automated notifications are skipped)
-3. **Draft** — Each reply is generated using your Context Link knowledge base and any lessons from previous corrections
+3. **Draft** — Each reply is generated using your Context Link knowledge base (if connected) and any lessons from previous corrections
 4. **Review** — Drafts appear in an interactive UI with collapsible cards, copy buttons, and action checklists
-5. **Learn** — After you send the replies, paste back what you actually sent or tell Claude what to do differently. Lessons are saved to Context Link and used in future runs.
+5. **Learn** — After you send the replies, paste back what you actually sent or tell Claude what to do differently. Lessons are saved to Context Link (or alternatively attempt to write to Claude's built-in memory) and used in future runs.
 
 In **Cowork**, the draft UI renders inline as an artifact. In **Claude Code**, it opens in your default browser.
 
@@ -117,7 +117,7 @@ This plugin uses [Context Link](https://context-link.ai) for two things: retriev
 
 </details>
 
-Without Context Link, the plugin still works. Replies are drafted from the email content alone, and lessons aren't persisted between sessions.
+Without Context Link, the plugin still works. Replies are drafted from the email content alone, and the plugin will attempt to save and recall lessons using Claude's built-in memory. This is more limited than Context Link (no external knowledge retrieval, and memory persistence depends on Claude's auto memory working correctly) but requires no setup other than adding the Gmail or Zoho connector.
 
 ## Example usage
 

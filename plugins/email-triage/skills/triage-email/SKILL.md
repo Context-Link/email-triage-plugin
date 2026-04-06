@@ -45,9 +45,18 @@ was not provided:
 
 > Which inbox should I pull from — **Gmail** or **Zoho**?
 
-## Pre-flight: Check if there's a Context Link
-If not, ask the user for there Context Link and paste it below for future use:
+## Pre-flight: Check knowledge base
+
+Check if there's a Context Link URL configured below. If there is one, use it.
+
 Context Link: 
+
+If no Context Link is configured above:
+1. Ask the user: "Do you use [Context Link](https://context-link.ai) for your knowledge base? If so, paste your link and I'll save it for next time. If not, I can try to use Claude's built-in memory instead. It's more limited but works without any setup."
+2. If the user provides a Context Link URL, paste it after `Context Link:` above for future use.
+3. If the user says they don't use Context Link, set `knowledge_mode = "claude-memory"` for this run. In this mode:
+   - Skip the get-context skill entirely (no external knowledge retrieval)
+   - Use Claude's own memory system to load and save lessons (see fallback steps below)
 
 ## Pre-flight: Choose the email address
 
@@ -74,9 +83,11 @@ See the provider-specific reference file for how to filter by recipient address.
 
 ## The workflow
 
-### Step 0 — Load lessons from Context Link
+### Step 0 — Load lessons
 
-Before processing any emails, fetch previously recorded support lessons once:
+Before processing any emails, fetch previously recorded support lessons once.
+
+**If using Context Link (default):**
 
 ```
 🔗 Retrieving lessons from Context Link → customer-support-email-lessons
@@ -88,6 +99,12 @@ when drafting replies in Step 2. These lessons take priority over general style 
 in draft-email-response — they represent real corrections from past edits.
 
 If the fetch returns empty or fails, continue without lessons.
+
+**If using Claude memory fallback (`knowledge_mode = "claude-memory"`):**
+
+Check your auto memory directory for a file called `email_support_lessons.md`. If it
+exists, read it and load the lessons. Apply them the same way — they take priority over
+general style rules. If the file doesn't exist yet, continue without lessons.
 
 ### Step 1 — Fetch unread emails from the last 24 hours
 
@@ -238,8 +255,9 @@ This skill relies on two other skills:
   If not available, draft-email-response can still generate replies but without
   internal context.
 - **update-memory** — Saves lessons learned from the user's email edits to the
-  `customer-support-email-lessons` namespace on Context Link. If not available,
-  the lesson-learning step is skipped silently.
+  `customer-support-email-lessons` namespace on Context Link. If not available
+  and the user is not using Claude memory fallback, the lesson-learning step is
+  skipped silently.
 
 Assets:
 - **draft-display.html** — Self-contained HTML/CSS/JS template for rendering draft
@@ -271,15 +289,25 @@ For options A and B:
 
 1. **Formulate concise, actionable lessons.** One or two sentences each. Can cover
    tone, facts, preferred phrasing, when to request access, what to cut, etc.
-2. **Save via update-memory.** Use the **update-memory** skill (see
-   `skills/update-memory/SKILL.md` in this plugin) with the namespace slug
-   `customer-support-email-lessons`.
+
+2. **Save the lessons.** How you save depends on the knowledge mode:
+
+   **If using Context Link (default):**
+   Use the **update-memory** skill (see `skills/update-memory/SKILL.md` in this plugin)
+   with the namespace slug `customer-support-email-lessons`.
    - **GET first** to retrieve existing lessons.
    - **Merge** new lessons in. Deduplicate — if a lesson overlaps with an existing
      one, update it rather than adding a near-duplicate.
    - **Never overwrite completely** unless the GET returned empty/nil. Always merge.
    - Keep the list context-window-efficient. Condense aggressively.
-3. Confirm: `✓ Recorded {N} new lesson(s) to customer-support-email-lessons on Context Link.`
+   - Confirm: `✓ Recorded {N} new lesson(s) to customer-support-email-lessons on Context Link.`
+
+   **If using Claude memory fallback (`knowledge_mode = "claude-memory"`):**
+   Save lessons to a file called `email_support_lessons.md` in your auto memory
+   directory. If the file already exists, read it first and merge new lessons in —
+   deduplicate and condense the same way you would with Context Link. Add or update
+   a pointer in `MEMORY.md` so the lessons are discoverable in future sessions.
+   - Confirm: `✓ Recorded {N} new lesson(s) to Claude memory.`
 
 ---
 

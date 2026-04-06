@@ -37,18 +37,29 @@ a clear, helpful draft reply the user can send or lightly edit.
 
 ## Dependencies
 
-This skill requires the **get-context** skill to be available. It uses Context Link
-to look up product knowledge, support docs, and past answers before drafting a reply.
+This skill uses **get-context** (via Context Link) to look up product knowledge,
+support docs, and past answers before drafting a reply. It also uses **update-memory**
+to save lessons learned from edits.
 
-It also uses the **update-memory** skill to save lessons learned from the user's edits
-to the `customer-support-email-lessons` namespace on Context Link. If update-memory is
-not available, skip the lesson-learning step silently.
+### Knowledge mode
 
-If get-context is not available or Context Link is not configured, warn the user:
+This skill supports two knowledge modes:
 
-> I can't look up internal knowledge because the get-context skill isn't available.
-> I can still draft a reply based on the email content alone, but it may be less
-> accurate. Want me to proceed without context, or set up Context Link first?
+**Context Link (default and preferred):** Uses get-context and update-memory skills
+to retrieve knowledge and persist lessons externally. If get-context is not available
+or Context Link is not configured, ask the user:
+
+> Do you use [Context Link](https://context-link.ai) for your knowledge base?
+> If so, paste your link and I'll set it up. If not, I can use Claude's built-in
+> memory instead. It's more limited (no external knowledge retrieval) but works
+> without any setup.
+
+**Claude memory fallback:** If the user says they don't use Context Link, set
+`knowledge_mode = "claude-memory"` for this run. In this mode:
+- Skip the get-context skill entirely (no external knowledge retrieval)
+- Draft replies based on the email content alone
+- Load and save lessons using Claude's auto memory (`email_support_lessons.md`
+  in the auto memory directory) instead of Context Link
 
 ---
 
@@ -82,6 +93,8 @@ capture the issue in a few hyphenated keywords.
 
 **Skip this step if `get_lessons` is `"false"`.**
 
+**If using Context Link (default):**
+
 Before drafting, retrieve any previously recorded lessons from Context Link using
 the **get-context** skill with the slug `customer-support-email-lessons`:
 
@@ -89,13 +102,26 @@ the **get-context** skill with the slug `customer-support-email-lessons`:
 🔗 Retrieving lessons from Context Link → customer-support-email-lessons
 ```
 
-If lessons are returned, hold them in memory and apply them when drafting the reply
-in Step 5. These lessons take priority over the general style rules below — they
-represent real corrections from past edits.
+**If using Claude memory fallback (`knowledge_mode = "claude-memory"`):**
+
+Check your auto memory directory for `email_support_lessons.md`. If it exists,
+read it and load the lessons.
+
+---
+
+If lessons are returned (from either source), hold them in memory and apply them
+when drafting the reply in Step 5. These lessons take priority over the general
+style rules below — they represent real corrections from past edits.
 
 If the fetch returns empty or fails, continue without lessons.
 
 ### 4. Retrieve context
+
+**Skip this step if using Claude memory fallback (`knowledge_mode = "claude-memory"`).**
+In Claude memory mode there is no external knowledge base to query. Draft the reply
+from the email content alone.
+
+**If using Context Link (default):**
 
 Use the get-context skill with `mode=customer-support`:
 
@@ -227,12 +253,22 @@ For options A and B:
 1. **Formulate concise, actionable lessons.** Each lesson should be one or two sentences
    max. They can cover anything: tone, factual corrections, preferred phrasing, when to
    request access vs. give instructions, what to cut, what to include, etc.
-2. **Save via update-memory.** Use the **update-memory** skill (see `skills/update-memory/SKILL.md`
-   in this plugin) with the namespace slug `customer-support-email-lessons`.
+
+2. **Save the lessons.** How you save depends on the knowledge mode:
+
+   **If using Context Link (default):**
+   Use the **update-memory** skill (see `skills/update-memory/SKILL.md` in this plugin)
+   with the namespace slug `customer-support-email-lessons`.
    - **GET first** to retrieve existing lessons.
    - **Merge** the new lessons into the existing list. Deduplicate — if a new lesson
      overlaps with an existing one, update the existing one rather than adding a duplicate.
    - **Never overwrite completely** unless the GET returned empty/nil. Always merge in.
    - The goal is a single, context-window-efficient list of lessons that grows smarter
      over time without growing long. Condense and consolidate aggressively.
-3. Confirm: `✓ Recorded {N} new lesson(s) to customer-support-email-lessons on Context Link.`
+   - Confirm: `✓ Recorded {N} new lesson(s) to customer-support-email-lessons on Context Link.`
+
+   **If using Claude memory fallback (`knowledge_mode = "claude-memory"`):**
+   Save lessons to `email_support_lessons.md` in your auto memory directory. If the
+   file already exists, read it first and merge new lessons in — deduplicate and
+   condense the same way. Add or update a pointer in `MEMORY.md`.
+   - Confirm: `✓ Recorded {N} new lesson(s) to Claude memory.`
