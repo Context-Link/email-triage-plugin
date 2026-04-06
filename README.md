@@ -31,7 +31,9 @@ Works in both **Claude Desktop (Cowork)** and **Claude Code (CLI)**. Everything 
         [From Anthropic:](https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-cowork) Scheduled tasks only run while your computer is awake and the Claude Desktop app is open. If your computer is asleep or the app is closed when a task is scheduled to run, Cowork will skip the task, then run it automatically once your computer wakes up
     </i>
 </sub>
-<br>
+
+
+
 <details>
 <summary>Screenshots</summary>
 
