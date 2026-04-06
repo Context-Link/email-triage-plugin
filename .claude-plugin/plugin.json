@@ -1,0 +1,11 @@
+{
+    "name": "email-triage",
+    "version": "1.0.0",
+    "description": "Triage your support inbox from Claude. Pull unread emails, generate context-aware draft replies using your knowledge base, and review them in an interactive UI. Learns from your corrections over time. Works in Cowork and Claude Code.",
+    "author": {
+        "name": "Context Link"
+    },
+    "homepage": "https://context-link.ai",
+    "repository": "https://github.com/Context-Link/email-triage-plugin",
+    "license": "MIT"
+}
