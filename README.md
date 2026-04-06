@@ -18,7 +18,8 @@ Works in both **Claude Desktop (Cowork)** and **Claude Code (CLI)**. Everything 
 ### Claude Code (CLI)
 
 ```bash
-/install-plugin Context-Link/email-triage-plugin
+/plugin marketplace add Context-Link/email-triage-plugin  
+/plugin install email-triage@email-triage-plugin
 ```
 
 Plugin source: [github.com/Context-Link/email-triage-plugin](https://github.com/Context-Link/email-triage-plugin)
