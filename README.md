@@ -25,10 +25,12 @@ Works in both **Claude Desktop (Cowork)** and **Claude Code (CLI)**. Everything 
 4. Select the **Personal** tab -> **+** -> **Add marketplace**
 5. Enter: `Context-Link/email-triage-plugin` -> Then click **+** once the **Email triage** skill has loaded
 
-<small>
-    *Once you've been through one successful `/triage-email` and your sources are setup, you can add a recurring scheduled task (screenshot below).
-    [From Anthropic:](https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-cowork) Scheduled tasks only run while your computer is awake and the Claude Desktop app is open. If your computer is asleep or the app is closed when a task is scheduled to run, Cowork will skip the task, then run it automatically once your computer wakes up
-</small>
+<sub>
+    <i>
+        *Once you've been through one successful `/triage-email` and your sources are setup, you can add a recurring scheduled task (screenshot below).
+        [From Anthropic:](https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-cowork) Scheduled tasks only run while your computer is awake and the Claude Desktop app is open. If your computer is asleep or the app is closed when a task is scheduled to run, Cowork will skip the task, then run it automatically once your computer wakes up
+    </i>
+</sub>
 
 <details>
 <summary>Screenshots</summary>
