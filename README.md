@@ -1,5 +1,14 @@
 # Email Triage Plugin for Claude
 
+![Email triage in Cowork](screenshots/cowork--email-triage.png)
+
+<details>
+<summary>Also works with Claude Code</summary>
+
+![Email triage in Claude Code](screenshots/claude-code--email-triage.png)
+
+</details>
+
 Triage your support inbox from Claude. Pull unread emails, generate context-aware draft replies using your knowledge base, and review them in an interactive UI, ready for a human to copy, edit, and send.
 
 The plugin learns from your corrections over time. After each triage run, you can paste the replies you actually sent or give direct feedback. Lessons are stored in your [Context Link](https://www.context-link.ai) knowledge base and applied to future drafts automatically.
