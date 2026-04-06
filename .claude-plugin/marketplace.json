@@ -1,0 +1,27 @@
+{
+    "name": "email-triage",
+    "owner": {
+        "name": "Context Link",
+        "email": "support@context-link.ai"
+    },
+    "metadata": {
+        "description": "Customer support email plugins for Claude",
+        "version": "1.0.0"
+    },
+    "plugins": [
+        {
+            "name": "email-triage",
+            "source": ".",
+            "description": "Triage your support inbox from Claude. Pull unread emails, generate context-aware draft replies using your knowledge base, and review them in an interactive UI. Learns from your corrections over time.",
+            "version": "1.0.0",
+            "author": {
+                "name": "Context Link"
+            },
+            "homepage": "https://context-link.ai",
+            "repository": "https://github.com/Context-Link/email-triage-plugin",
+            "license": "MIT",
+            "keywords": ["email", "triage", "support", "inbox", "drafts"],
+            "category": "productivity"
+        }
+    ]
+}
