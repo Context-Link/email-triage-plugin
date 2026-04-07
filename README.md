@@ -11,6 +11,8 @@
 
 **Triage your support inbox from Claude. Pull unread emails, generate context-aware draft replies using your knowledge base, and review them in an interactive UI, ready for a human to copy, edit, and send.**
 
+[Demo video](https://www.youtube.com/watch?v=XZ53VGOOqmM)
+
 The plugin learns from your corrections over time. After each triage run, you can paste the replies you actually sent or give direct feedback. Lessons are stored in your [Context Link](https://www.context-link.ai) knowledge base and applied to future drafts automatically. Don't use Context Link? No problem, the plugin can try to fall back to Claude's built-in memory to save and recall lessons between sessions.
 
 Works in both **Claude Desktop (Cowork)** and **Claude Code (CLI)**. Everything runs in the cloud (email fetching via Gmail or Zoho MCP, context retrieval via Context Link) so can be used outside of your local computer.
