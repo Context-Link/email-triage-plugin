@@ -1,6 +1,6 @@
 # Email Triage Plugin for Claude
 
-![Email triage in Cowork](screenshots/cowork--email-triage.png)
+![Email triage in Cowork](screenshots/cowork--email-triage-v2.png)
 
 <details>
 <summary>Also works with Claude Code</summary>
