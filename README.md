@@ -5,7 +5,7 @@
 <details>
 <summary>Also works with Claude Code</summary>
 
-![Email triage in Claude Code](screenshots/claude-code--email-triage.png)
+![Email triage in Claude Code](screenshots/claude-code--email-triage.png?)
 
 </details>
 
