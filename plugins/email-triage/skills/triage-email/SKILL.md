@@ -180,20 +180,23 @@ After all drafts are generated, present them using the **draft display UI**.
 Read the HTML template at `draft-display.html` (same directory as this file). Copy its
 full contents, then replace the `DRAFTS` array with the real data from Steps 1 and 2:
 
+**Order the array oldest-first** (earliest `received_at` first) so the user works
+through emails in chronological order.
+
 ```js
 const DRAFTS = [
   {
     id: 1,
     from: "{fromAddress}",
     subject: "{subject}",
-    received: "{relative time, e.g. '~2h ago'}",
+    received: "{relative time, e.g. '~6h ago'}",
     draft: "{scrubbed draft reply text from Step 2}",
     actions: [
       "{required action 1}",
       "{required action 2, if any}"
     ]
   },
-  // ... one entry per email
+  // ... one entry per email, oldest first
 ];
 ```
 
