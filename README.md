@@ -9,7 +9,7 @@
 
 </details>
 
-**Triage your support inbox from Claude. Pull unread emails, generate context-aware draft replies using your knowledge base, and review them in an interactive UI, ready for a human to copy, edit, and send.**
+**Triage your support inbox from Claude. Pull unread emails, generate context-aware draft replies using your knowledge base, and present them in an interactive HTML UI — ready for a human to review, copy, and send.**
 
 [Demo video](https://www.youtube.com/watch?v=XZ53VGOOqmM)
 
@@ -82,7 +82,7 @@ Paste any customer email and run `/draft-reply`. The plugin looks up relevant co
 
 | Command | Description |
 |---|---|
-| `/triage-emails` | Pull unread emails, generate draft replies, and display them in the interactive UI |
+| `/triage-emails` | Pull unread emails, generate draft replies, and present them in the interactive UI for review |
 | `/draft-reply` | Paste a single customer email and get a context-aware draft reply |
 
 ## Skills

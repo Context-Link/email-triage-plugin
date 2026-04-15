@@ -1,5 +1,5 @@
 ---
-description: Pull unread emails from the last 24 hours, generate draft replies, and push them back to your inbox
+description: Pull unread emails from the last 24 hours, generate draft replies, and present them in an interactive UI for review
 allowed-tools: Bash, WebFetch, ToolSearch
 argument-hint: "[--provider gmail|zoho] [--address email]"
 ---

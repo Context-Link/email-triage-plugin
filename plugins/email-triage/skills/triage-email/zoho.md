@@ -1,6 +1,6 @@
 # Zoho Mail Provider Reference
 
-How to fetch emails and create drafts using the official Zoho Mail MCP connector.
+How to fetch emails using the official Zoho Mail MCP connector.
 
 ---
 
@@ -29,7 +29,8 @@ If the tools aren't found via `ToolSearch`, tell the user:
 - **No `create_draft` tool** — the MCP does not support saving drafts.
 - **No `read_email` tool** — no way to fetch the full body of a single message.
   Use the `summary` field from `listEmails` to get a preview.
-- **No `sendEmail` tool** may be available — depends on user's permission grants.
+- These limitations do not affect this skill. We only need to READ emails.
+  Draft replies are presented in the HTML UI, not pushed back to Zoho.
 
 ---
 
@@ -157,65 +158,10 @@ filter client-side if the response includes a status field.
 
 ---
 
-## Step 3: Create draft replies
-
-### If a `create_draft` tool now exists
-
-Always check `ToolSearch` first — Zoho may have added draft support since this
-reference was written. If a draft tool exists, use it.
-
-### Current reality: no draft tool available
-
-The Zoho Mail MCP currently has no draft or send tools available. Instead:
-
-1. **Present the drafts in chat** for the user to copy into Zoho Mail manually:
-
-   > The Zoho Mail connector doesn't support creating drafts yet. Here are the
-   > draft replies — you can copy them into Zoho Mail:
-
-2. For each email, format a ready-to-copy block:
-
-   ```
-   ---
-   To: {fromAddress}
-   Subject: Re: {subject}
-
-   [REPLY NEEDED] — This email requires a human reply.
-
-   --- Original message from {fromAddress} ---
-   {summary / first 3 lines}
-   ---
-   ```
-
-3. After presenting all drafts, tell the user:
-
-   > I've prepared {N} draft replies above. Copy each one into Zoho Mail as a
-   > reply to the original thread. I'll keep an eye on whether Zoho adds draft
-   > creation to their MCP — once they do, this step will be fully automated.
-
-### If `sendEmail` becomes available
-
-If the user has granted send permissions and a `sendEmail` tool appears:
-
-1. **Warn the user** — sending is irreversible, unlike creating drafts.
-2. **Only send if the user explicitly confirms** for each email or as a batch.
-3. Never send without confirmation, even if the user originally said "triage emails."
-
----
-
-## Threading notes
-
-- A single new email (no prior replies) may not have a `threadId`.
-- The `threadId` field from `listEmails` is the most reliable threading reference.
-- When composing replies manually, the user should reply from within the original
-  thread in Zoho Mail to maintain threading.
-
----
-
 ## Error handling
 
-- If `ToolSearch` finds no Zoho Mail tools → connector not connected, guide user to set up
-- If `getMailAccounts` fails → authentication issue, ask user to reconnect the connector
-- If `listEmails` returns empty with `status: "unread"` → no unread emails, report inbox zero
-- If a specific operation fails → log the error, skip that message, continue with the rest
+- If `ToolSearch` finds no Zoho Mail tools -> connector not connected, guide user to set up
+- If `getMailAccounts` fails -> authentication issue, ask user to reconnect the connector
+- If `listEmails` returns empty with `status: "unread"` -> no unread emails, report inbox zero
+- If a specific operation fails -> log the error, skip that message, continue with the rest
 - Report all failures at the end with the error details

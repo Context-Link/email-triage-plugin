@@ -2,7 +2,7 @@
 name: triage-email
 description: >
   Pull unread support emails from the last 24 hours, generate a draft reply for each,
-  and push those drafts back into the correct thread — ready for a human to review and send.
+  and present them in an interactive HTML UI for the human to review, copy, and send.
   Supports Gmail (via MCP connector) and Zoho Mail (via MCP connector).
   Use this skill whenever the user says "triage emails", "triage inbox", "draft replies",
   "process support emails", "check support inbox", or any variation of pulling emails
@@ -23,8 +23,12 @@ args:
 
 # Triage Email Skill
 
-Pull unread emails from the last 24 hours, generate a draft reply for each, and push
-those drafts back as threaded replies — ready for a human to review and send.
+Pull unread emails from the last 24 hours, generate a draft reply for each, and
+present them in an interactive HTML UI — ready for a human to review, copy, and send.
+
+**Important:** This skill does NOT create drafts in the email provider, does NOT send
+emails, and does NOT push anything back to the inbox. The only output is the HTML UI
+(or plain text fallback). The human copies drafts into their email client manually.
 
 ---
 
@@ -90,7 +94,7 @@ Before processing any emails, fetch previously recorded support lessons once.
 **If using Context Link (default):**
 
 ```
-🔗 Retrieving lessons from Context Link → customer-support-email-lessons
+Retrieving lessons from Context Link -> customer-support-email-lessons
 ```
 
 Use the **get-context** skill with the slug `customer-support-email-lessons` (no mode
@@ -137,63 +141,29 @@ The only exceptions — skip (and flag to the user) emails that appear to be:
 - Phishing or suspicious/malicious
 - Automated system notifications that don't need a reply
 
-For skipped emails, note them at the end: `⚠ Skipped {N} emails (spam/automated).`
+For skipped emails, note them at the end: `Skipped {N} emails (spam/automated).`
 
-### Step 2 — Generate reply using draft-email-response
+### Step 2 — Draft replies using draft-email-response
 
-For each email from Step 1, gather customer history and then draft a reply.
-
-#### Step 2a — Look up customer history (sub-agent)
-
-Before drafting, launch a **sub-agent** to fetch the sender's previous email history
-from Context Link. This runs concurrently with the topic-based context lookup that
-draft-email-response does internally, so it adds customer awareness without slowing
-things down.
-
-```
-Agent(
-  prompt: "Use the get-context skill to look up '{fromAddress}' on Context Link.
-           Return a concise summary (under 100 words) covering:
-           - How many previous conversations exist
-           - What issues were discussed
-           - What was resolved and what's still open
-           - Any relevant context for the current email: '{subject}'
-           If no history is found, just say 'No previous history found.'",
-  description: "Customer history lookup"
-)
-```
-
-Hold the returned summary for use in Step 2b. If the sub-agent returns no history
-or fails, continue without it — the draft will still work, just without customer
-context.
-
-**Parallelism note:** When processing multiple emails, you can launch all customer
-history sub-agents at the same time (one per unique sender). No need to wait for
-one to finish before starting the next. Deduplicate by sender — if two emails are
-from the same address, reuse the same history for both.
-
-#### Step 2b — Draft the reply
-
-Use the **draft-email-response** skill to generate the reply. Pass the customer
-history from Step 2a as additional context:
+For each email from Step 1, use the **draft-email-response** skill to generate a reply:
 
 ```
 draft-email-response(
   from: "{fromAddress}",
   subject: "{subject}",
   body: "{summary or body content}",
-  customer_history: "{summary from Step 2a, or empty if none}",
   prompt_lessons: "false",
   get_lessons: "false"
 )
 ```
 
+The email thread context from the provider (available via the `summary` field or full
+body) already contains the conversation history, so no separate history lookup is needed.
+
 The draft-email-response skill will:
 1. Identify the core issue in the email
 2. Look up relevant product/feature context via the **get-context** skill (Context Link)
-3. Use the customer history to tailor the reply (e.g. reference prior conversations,
-   avoid re-explaining things already discussed, acknowledge ongoing issues)
-4. Draft a warm, clear, practical reply
+3. Draft a warm, clear, practical reply
 
 Collect the draft reply text returned by the skill for each email.
 
@@ -254,13 +224,13 @@ draft text so the JS string stays valid.
 ToolSearch(query: "+cowork", max_results: 3)
 ```
 
-- **If Cowork tools are found** → write the populated `.html` file to the user's
+- **If Cowork tools are found** -> write the populated `.html` file to the user's
   workspace folder and present it as an artifact. It renders inline in Cowork.
 
-- **If no Cowork tools** (Claude Code / CLI) → write the populated `.html` file to a
+- **If no Cowork tools** (Claude Code / CLI) -> write the populated `.html` file to a
   temp path and tell the user where to find it:
   ```
-  ✓ {N} draft replies ready. Open this file in your browser to review:
+  Done — {N} draft replies ready. Open this file in your browser to review:
     file:///tmp/email-drafts-{YYYY-MM-DD}.html
   ```
   Then ask if they'd like you to open it automatically:
@@ -286,13 +256,11 @@ Both environments use the exact same HTML file — no build step, no dependencie
 
 This skill relies on two other skills:
 
-- **draft-email-response** — Generates context-aware draft replies (Step 2b).
+- **draft-email-response** — Generates context-aware draft replies (Step 2).
   Located in the same plugin at `skills/draft-email-response/`. If not available,
   the skill falls back to placeholder `[REPLY NEEDED]` drafts.
 - **get-context** — Retrieves internal knowledge from Context Link. Used by
   draft-email-response to look up product docs, support history, and policies.
-  Also used by the customer history sub-agent (Step 2a) to look up previous
-  conversations by sender email address.
   If not available, draft-email-response can still generate replies but without
   internal context.
 - **update-memory** — Saves lessons learned from the user's email edits to the
@@ -331,50 +299,36 @@ For options A and B:
 1. **Formulate concise, actionable lessons.** One or two sentences each. Can cover
    tone, facts, preferred phrasing, when to request access, what to cut, etc.
 
-2. **Save the lessons via sub-agent.** Delegate the save to a sub-agent so it has
-   full context to retrieve, merge, and write back without losing existing lessons.
+2. **Save the lessons.** How you save depends on the knowledge mode:
 
    **If using Context Link (default):**
-
-   ```
-   Agent(
-     prompt: "You need to merge new support email lessons into the existing
-              lesson list on Context Link.
-
-              NEW LESSONS TO ADD:
-              {formatted list of new lessons from the diffs/instructions}
-
-              Steps:
-              1. Use the get-context skill to retrieve the current lessons
-                 from the slug 'customer-support-email-lessons'.
-              2. Read every existing lesson carefully.
-              3. Merge the new lessons into the existing list:
-                 - If a new lesson overlaps with an existing one, update the
-                   existing one rather than adding a near-duplicate.
-                 - Never drop or overwrite existing lessons. Only add or refine.
-                 - Keep the list concise and context-window-efficient.
-              4. Use the update-memory skill with the slug
-                 'customer-support-email-lessons' to save the merged list.
-              5. Report back how many lessons were added or updated.",
-     description: "Merge support email lessons"
-   )
-   ```
-
-   After the sub-agent completes, confirm:
-   `✓ Recorded {N} new lesson(s) to customer-support-email-lessons on Context Link.`
+   Use the **get-context** skill with the slug `customer-support-email-lessons` to
+   retrieve existing lessons. Then merge the new lessons in:
+   - If a new lesson overlaps with an existing one, update the existing one rather
+     than adding a near-duplicate.
+   - Never drop or overwrite existing lessons. Only add or refine.
+   - Keep the list concise and context-window-efficient.
+   Use the **update-memory** skill with the slug `customer-support-email-lessons`
+   to save the merged list.
+   Confirm: `Recorded {N} new lesson(s) to customer-support-email-lessons on Context Link.`
 
    **If using Claude memory fallback (`knowledge_mode = "claude-memory"`):**
    Save lessons to a file called `email_support_lessons.md` in your auto memory
    directory. If the file already exists, read it first and merge new lessons in —
    deduplicate and condense the same way. Add or update a pointer in `MEMORY.md`
    so the lessons are discoverable in future sessions.
-   - Confirm: `✓ Recorded {N} new lesson(s) to Claude memory.`
+   Confirm: `Recorded {N} new lesson(s) to Claude memory.`
 
 ---
 
 ## Important notes
 
-- Never send an email automatically. Only create drafts.
+- Never send an email automatically. Never create drafts in the email provider.
+- The only output is the HTML UI (or plain text fallback). The human copies drafts manually.
 - Draft all emails automatically — do not ask for confirmation. Only skip spam, phishing, or automated notifications.
 - Respect the user's choice if they want to skip specific emails after seeing the summary.
 - The `[REPLY NEEDED]` tag is a convention — the user can customise it.
+- Do NOT use sub-agents (Agent tool) anywhere in this skill. All work runs inline.
+  Sub-agents cannot reliably access WebFetch or MCP tools in Cowork scheduled tasks.
+- Context Link calls use the **get-context** skill, which does a simple WebFetch GET
+  request. Never use browser navigation (Chrome) for Context Link — it's just a URL fetch.

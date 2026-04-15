@@ -16,10 +16,6 @@ args:
   body:
     description: "The email body content to reply to"
     required: false
-  customer_history:
-    description: "A concise summary of previous email conversations with this customer, retrieved from Context Link by the calling skill (e.g. triage-email). Used to tailor the reply — reference prior conversations, avoid re-explaining things already discussed, acknowledge ongoing issues. If empty or not provided, draft without customer history."
-    required: false
-    default: ""
   prompt_lessons:
     description: "Whether to prompt the user for email lessons after drafting. Set to 'false' when called from triage-email (which handles lessons itself). Defaults to 'true'."
     required: false
@@ -103,7 +99,7 @@ Before drafting, retrieve any previously recorded lessons from Context Link usin
 the **get-context** skill with the slug `customer-support-email-lessons`:
 
 ```
-🔗 Retrieving lessons from Context Link → customer-support-email-lessons
+Retrieving lessons from Context Link -> customer-support-email-lessons
 ```
 
 **If using Claude memory fallback (`knowledge_mode = "claude-memory"`):**
@@ -130,7 +126,7 @@ from the email content alone.
 Use the get-context skill with `mode=customer-support`:
 
 ```
-🔗 Retrieving context on {query} from Context Link
+Retrieving context on {query} from Context Link
 ```
 
 Fetch using the get-context skill (see `skills/get-context/SKILL.md`), appending any kind of customer support related mode query param to the request if there's one listed in the get-context skill.
@@ -142,15 +138,6 @@ is insufficient, supplement with your own knowledge — but never invent facts.
 
 Write the reply following the style rules below. If lessons were loaded in Step 3,
 apply them here — they override the general style rules when there's a conflict.
-
-**If `customer_history` was provided**, use it to tailor the reply:
-- If there's an ongoing issue from previous threads, acknowledge it
-  (e.g. "Following up on this..." or reference what was already tried)
-- Don't re-explain things the customer already knows from prior conversations
-- If the customer is a repeat correspondent, match the established rapport
-- If this is their first email (no history found), treat it as a fresh conversation
-
-The customer history is a brief summary — use it for awareness, not verbatim quotes.
 
 ### 6. Scrub the draft
 
@@ -178,7 +165,7 @@ Write like a real support person — warm, clear, practical, concise.
 
 ### Length
 
-Aim for **3–5 short sentences per issue**. Most replies should be under 100 words total.
+Aim for **3-5 short sentences per issue**. Most replies should be under 100 words total.
 A good support email answers the question and gets out of the way. If you catch yourself
 writing a second paragraph to explain the same point, cut it. Customers are busy — the
 shorter and clearer the reply, the more helpful it is.
@@ -196,8 +183,8 @@ When the issue is something we can fix on the customer's end (theme tweaks, conf
 changes, setup problems), **don't write a tutorial**. Instead:
 
 1. Briefly explain what's causing it (one sentence)
-2. Offer to fix it directly — request temporary collaborator/staff access via Shopify,
-   or whatever access is appropriate
+2. Offer to fix it directly — request temporary access via Shopify (we request it,
+   the customer accepts via an email from Shopify)
 3. Let them know you'll sort it out once you're in
 
 This is a core pattern in our support. Customers don't want instructions — they want
@@ -227,7 +214,7 @@ Subject: Re: {subject}
 {draft email — scrubbed}
 
 **Required actions**
-- {action the support rep needs to take, e.g. "Request temp collaborator access via Shopify"}
+- {action the support rep needs to take, e.g. "Request temp access via Shopify"}
 - {another action if needed}
 
 **Sources**
@@ -278,10 +265,10 @@ For options A and B:
    - **Never overwrite completely** unless the GET returned empty/nil. Always merge in.
    - The goal is a single, context-window-efficient list of lessons that grows smarter
      over time without growing long. Condense and consolidate aggressively.
-   - Confirm: `✓ Recorded {N} new lesson(s) to customer-support-email-lessons on Context Link.`
+   - Confirm: `Recorded {N} new lesson(s) to customer-support-email-lessons on Context Link.`
 
    **If using Claude memory fallback (`knowledge_mode = "claude-memory"`):**
    Save lessons to `email_support_lessons.md` in your auto memory directory. If the
    file already exists, read it first and merge new lessons in — deduplicate and
    condense the same way. Add or update a pointer in `MEMORY.md`.
-   - Confirm: `✓ Recorded {N} new lesson(s) to Claude memory.`
+   - Confirm: `Recorded {N} new lesson(s) to Claude memory.`
