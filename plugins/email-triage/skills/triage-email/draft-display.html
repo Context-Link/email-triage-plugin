@@ -19,6 +19,12 @@
   .card { border: 1px solid #e5e5e5; border-radius: 10px; overflow: hidden; background: #fff; transition: opacity 0.2s, border-color 0.2s; }
   .card.checked { opacity: 0.5; border-color: #f0f0f0; }
 
+  /* Urgent / high-priority emails — orange left accent + pill in meta */
+  .card.priority-urgent { border-left: 4px solid #d97706; }
+  .card.priority-urgent.checked { border-left-color: #f0c98a; }
+  .priority-pill { display: inline-block; font-size: 10px; font-weight: 600; color: #d97706; background: #fef3c7; border: 1px solid #fcd34d; padding: 1px 6px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 6px; vertical-align: 1px; }
+  .card.checked .priority-pill { color: #c8a97a; background: #faf5ea; border-color: #ecdcb8; }
+
   .card-header { display: flex; align-items: center; width: 100%; cursor: pointer; }
   .card-checkbox { padding: 14px 0 14px 16px; display: flex; align-items: center; }
   .card-summary { flex: 1; padding: 14px 16px 14px 12px; display: flex; align-items: center; justify-content: space-between; }
@@ -75,14 +81,29 @@
 <div class="cards" id="cards"></div>
 
 <script>
-// ── DATA ── Replace this array with real draft data from the triage run
+// ── DATA ── Replace this array with real draft data from the triage run.
+// Order: urgent first (oldest-first within urgent), then normal (oldest-first).
+// Each draft may include `priority: "urgent"` to render an orange left accent
+// and an "URGENT" pill in the meta line. Omit or set to "normal" otherwise.
 const DRAFTS = [
   {
     id: 1,
+    priority: "urgent",
+    from: "sara@example-store.com",
+    subject: "URGENT! Pre-order button broken on live drop",
+    received: "~30m ago",
+    draft: "Hi Sara,\n\nLooking now…\n\nThanks,\nOli",
+    actions: [
+      "Send Shopify collaborator request",
+      "Confirm 'Optimize button loading' is enabled"
+    ]
+  },
+  {
+    id: 2,
     from: "frpeterheers@uncutmountainpress.com",
     subject: "Help with Preproduct listing",
     received: "~6h ago",
-    draft: "Hi Fr. Peter,\n\nBoth of these are theme-level issues I can fix for you. The \"In stock\" notice is your theme reacting to Shopify's \"Continue selling when out of stock\" checkbox, which is required for pre-orders to work. The Add to Cart button just needs to be hidden for products where only pre-order is active.\n\nI'll request temporary access to your Shopify store now and get both fixed up for you.\n\nBest,\nOli",
+    draft: "Hi Fr. Peter,\n\nBoth of these are theme-level issues I can fix for you. The \"In stock\" notice is your theme reacting to Shopify's \"Continue selling when out of stock\" checkbox, which is required for pre-orders to work. The Add to Cart button just needs to be hidden for products where only pre-order is active.\n\nI'll request temporary access to your Shopify store now and get both fixed up for you.\n\nThanks,\nOli",
     actions: [
       "Send Shopify collaborator request to Fr. Peter Heers' store",
       "Hide 'In stock, Ready to Ship' label in theme",
@@ -90,22 +111,11 @@ const DRAFTS = [
     ]
   },
   {
-    id: 2,
-    from: "sarah@example-store.com",
-    subject: "Pre-order button not showing on collection page",
-    received: "~2h ago",
-    draft: "Hi Sarah,\n\nThe pre-order button only loads on the product page by default. Collection pages use quick-buy buttons from your theme, which bypass PreProduct.\n\nI'll request temporary access now and add pre-order support to your collection page template.\n\nBest,\nOli",
-    actions: [
-      "Send Shopify collaborator request",
-      "Add PreProduct snippet to collection page template"
-    ]
-  },
-  {
     id: 3,
     from: "mike@gadgetworld.co",
     subject: "Payment plan emails not sending",
     received: "~45m ago",
-    draft: "Hi Mike,\n\nThis usually means the email notification for payment plans is toggled off in PreProduct settings. Go to PreProduct > Settings > Notifications and make sure \"Payment plan created\" is enabled.\n\nIf that's already on, let me know and I'll dig deeper.\n\nBest,\nOli",
+    draft: "Hi Mike,\n\nThis usually means the email notification for payment plans is toggled off in PreProduct settings. Go to PreProduct > Settings > Notifications and make sure \"Payment plan created\" is enabled.\n\nIf that's already on, let me know and I'll dig deeper.\n\nThanks,\nOli",
     actions: []
   }
 ];
@@ -150,9 +160,10 @@ function render() {
   DRAFTS.forEach(function(d) {
     const isOpen = openIds.has(d.id);
     const isChecked = checkedIds.has(d.id);
+    const isUrgent = d.priority === 'urgent';
 
     const card = document.createElement('div');
-    card.className = 'card' + (isChecked ? ' checked' : '');
+    card.className = 'card' + (isChecked ? ' checked' : '') + (isUrgent ? ' priority-urgent' : '');
 
     // Header
     const header = document.createElement('div');
@@ -188,7 +199,13 @@ function render() {
     subj.textContent = d.subject;
     const meta = document.createElement('div');
     meta.className = 'card-meta';
-    meta.textContent = d.from + ' \u00B7 ' + d.received;
+    if (isUrgent) {
+      const pill = document.createElement('span');
+      pill.className = 'priority-pill';
+      pill.textContent = 'Urgent';
+      meta.appendChild(pill);
+    }
+    meta.appendChild(document.createTextNode(d.from + ' · ' + d.received));
     info.appendChild(subj);
     info.appendChild(meta);
 
@@ -229,7 +246,7 @@ function render() {
       copyBtn.textContent = 'Copy draft';
       copyBtn.addEventListener('click', function() {
         copyToClipboard(d.draft).then(function() {
-          copyBtn.textContent = '\u2713 Copied';
+          copyBtn.textContent = '✓ Copied';
           copyBtn.classList.add('copied');
           setTimeout(function() {
             copyBtn.textContent = 'Copy draft';

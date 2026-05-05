@@ -120,18 +120,40 @@ Pull all unread messages received in the last 24 hours. For each message, captur
 - `subject` — email subject line
 - `body` — full email body (plain text preferred, HTML fallback)
 - `received_at` — timestamp
+- `priority` — `"urgent"` or `"normal"` (see "Detecting priority" below)
 
 Follow the provider-specific reference file for exact tool calls / API requests.
 
-After fetching, present a summary table to the user:
+#### Detecting priority
+
+Mark an email as `priority: "urgent"` if any of the following apply. Otherwise treat it
+as `"normal"`. Be conservative — over-flagging dilutes the signal.
+
+- **Subject signals:** the subject contains "URGENT", "ASAP", "Emergency", "Help!!",
+  multiple exclamation marks, "down", "broken", or "not working" (case-insensitive).
+- **Provider flags:** the message is flagged as high-importance / priority by the
+  email provider (e.g. Zoho `priority: "high"`, Gmail importance markers).
+- **Time-pressured payment / refund issues:** body explicitly references being charged
+  in error, a refund needed "immediately", a failed launch in progress, or a live
+  customer-facing pre-order being broken right now.
+- **Live-store breakage from an existing customer:** explicit mention that something
+  is currently broken on a live storefront (e.g. "checkout is failing", "site is
+  showing the wrong button", "launch goes live in X hours").
+- **Repeat-bump within the same thread:** the customer has sent two or more emails
+  in the same thread within the last few hours chasing for a response.
+
+Do NOT mark prospect demo requests or general questions as urgent, even if phrased
+enthusiastically. Urgency is reserved for time-pressured operational issues.
+
+After fetching, present a summary table to the user (urgent rows flagged):
 
 ```
 Found {N} unread emails from the last 24 hours:
 
-| # | From | Subject | Received |
-|---|------|---------|----------|
-| 1 | customer@example.com | Order not received | 2h ago |
-| 2 | ... | ... | ... |
+| # | From | Subject | Received | Priority |
+|---|------|---------|----------|----------|
+| 1 | customer@example.com | URGENT! Pre-order broken | 30m ago | 🟧 Urgent |
+| 2 | ... | ... | ... | — |
 ```
 
 **Do not ask for confirmation.** Proceed to draft replies for all emails automatically.
@@ -186,13 +208,21 @@ After all drafts are generated, present them using the **draft display UI**.
 Read the HTML template at `draft-display.html` (same directory as this file). Copy its
 full contents, then replace the `DRAFTS` array with the real data from Steps 1 and 2:
 
-**Order the array oldest-first** (earliest `received_at` first) so the user works
-through emails in chronological order.
+**Order the array urgent-first, then chronological.** Within each tier, sort by
+`received_at` ascending (oldest first):
+
+1. All emails with `priority: "urgent"`, oldest first.
+2. All other emails (`priority: "normal"` or omitted), oldest first.
+
+Urgent emails render with an orange left accent on the card and an "Urgent" pill in
+the meta line — the template handles the styling automatically when you set the
+`priority` field.
 
 ```js
 const DRAFTS = [
   {
     id: 1,
+    priority: "urgent",            // omit or set "normal" for non-urgent
     from: "{fromAddress}",
     subject: "{subject}",
     received: "{relative time, e.g. '~6h ago'}",
@@ -202,12 +232,13 @@ const DRAFTS = [
       "{required action 2, if any}"
     ]
   },
-  // ... one entry per email, oldest first
+  // ... urgent items first (oldest-first within urgent), then normal items oldest-first
 ];
 ```
 
 The UI renders as interactive collapsible cards:
 - **Checkbox** on the left of each card — tick to mark as done (fades and strikes through)
+- **Orange left accent + "Urgent" pill** on cards where `priority === "urgent"`
 - Click to expand/collapse and see the full draft with a **Copy draft** button
 - **Required actions** appear as checkboxes so the rep can tick them off
 - "Expand all / Collapse all" toggle at the top
