@@ -55,6 +55,8 @@ Check if there's a Context Link URL configured below. If there is one, use it.
 
 Context Link: 
 
+If not, check if there is Context Link skills already installed, namely get-context and ask-question
+
 If no Context Link is configured above:
 1. Ask the user: "Do you use [Context Link](https://context-link.ai) for your knowledge base? If so, paste your link and I'll save it for next time. If not, I can try to use Claude's built-in memory instead. It's more limited but works without any setup."
 2. If the user provides a Context Link URL, paste it after `Context Link:` above for future use.
@@ -103,6 +105,10 @@ when drafting replies in Step 2. These lessons take priority over general style 
 in draft-email-response — they represent real corrections from past edits.
 
 If the fetch returns empty or fails, continue without lessons.
+
+**Important:** the lessons file is meta-rules about *how* to reply (tone, sign-off,
+structure, common phrasing pitfalls). It is NOT the product knowledge itself.
+Loading lessons does not substitute for the per-email Context Link lookup in Step 2.
 
 **If using Claude memory fallback (`knowledge_mode = "claude-memory"`):**
 
@@ -165,31 +171,98 @@ The only exceptions — skip (and flag to the user) emails that appear to be:
 
 For skipped emails, note them at the end: `Skipped {N} emails (spam/automated).`
 
-### Step 2 — Draft replies using draft-email-response
+### Step 2 — Look up product context, THEN draft
 
-For each email from Step 1, use the **draft-email-response** skill to generate a reply:
+This step has two phases. **Phase 2a is mandatory for every non-trivial email.**
+Skipping it produces confidently-worded wrong drafts on factual topics, which is
+worse than no draft at all.
+
+#### Phase 2a — Classify each email, then look up context
+
+For each email, decide whether it is **trivial** or **non-trivial**.
+
+**Trivial emails** (skip Context Link lookup, go straight to 2b):
+
+- Pure acknowledgement: "thanks for the URLs, I'll take a look"
+- Scheduling: confirming or declining a time
+- Asking the customer for more info you don't yet have ("which store is this on?")
+- Routing: "I'll loop in X" / "let me check with the team"
+- Replies that contain no factual claim about how anything works
+
+**Non-trivial emails — Context Link lookup is MANDATORY before drafting:**
+
+- Any explanation of how PreProduct works (charging, refunds, fulfilment holds,
+  redirects, templates, listing manager, automations, payment plans, deposits,
+  pay-early, isolated cart/checkout, customer cancellation, etc.)
+- Any explanation of how Shopify or another platform interacts with PreProduct
+  (B2B catalogues, Shop Pay Installments, Affirm, payment methods, sales channels,
+  theme behaviour, split shipping, mixed carts, etc.)
+- Any feature-availability question ("does X work with Y?")
+- Any pricing or plan question
+- Any bug report — the right answer is often a platform limitation, not a bug,
+  and Context Link is where the canonical framing lives
+- Any "why did X happen on order Y" question
+- Anything you are about to write a confident-sounding paragraph about
+
+**Default is non-trivial.** If you are unsure which bucket an email falls into,
+treat it as non-trivial and run the lookup. The cost of an extra Context Link query
+is trivial. The cost of an invented answer is a customer email the user has to
+rewrite from scratch — and a wrong claim sent to a real customer if they miss it.
+
+For each non-trivial email:
+
+1. **Identify the 1–3 distinct topics or factual claims the reply needs to verify.**
+   Write them down explicitly before you fetch. Example for an email about a mixed-SKU
+   charge: "(a) how does charging behave when only some line items on an order are
+   being charged? (b) is per-line-item charging a Shopify Plus feature?"
+2. **For each topic, run one of:**
+   - `get-context` with a specific slug if you know which slug covers the topic
+     (e.g. `charging-mechanics`, `refund-behaviour`, `mixed-cart-shipping`).
+   - `ask-question` with the question phrased plainly if you don't know the slug.
+     This searches the whole Context Link knowledge base semantically. Prefer this
+     when in doubt — guessing a slug that doesn't exist returns nothing useful, but
+     `ask-question` will find the right material.
+3. **Hold the returned content per topic. Do not draft yet.**
+
+Record what you queried for each email — surface the queries in the final summary so
+the human can see whether you reached for the right context. Format suggestion:
 
 ```
-draft-email-response(
-  from: "{fromAddress}",
-  subject: "{subject}",
-  body: "{summary or body content}",
-  prompt_lessons: "false",
-  get_lessons: "false"
-)
+| # | From | Subject | Priority | Context queries |
+|---|------|---------|----------|-----------------|
+| 1 | kirill@... | Re: Urgent charging | 🟧 | charging-mechanics, refund-behaviour |
+| 2 | shoko@... | Re: Help with PreProduct | — | (trivial — ack only) |
 ```
 
-The email thread context from the provider (available via the `summary` field or full
-body) already contains the conversation history, so no separate history lookup is needed.
+#### Phase 2b — Draft each reply
 
-The draft-email-response skill will:
-1. Identify the core issue in the email
-2. Look up relevant product/feature context via the **get-context** skill (Context Link)
-3. Draft a warm, clear, practical reply
+Once Context Link content is in hand (or you've classified the email as trivial),
+draft the reply.
 
-Collect the draft reply text returned by the skill for each email.
+**Drafting rules:**
 
-**If draft-email-response is not available**, fall back to the placeholder format:
+- **Lead with what Context Link said, not with internal knowledge.** If Context Link
+  says "this is a Shopify platform limitation, here's the doc", your first line
+  should reflect that. Do NOT open with "that sounds off, let me dig in" if the
+  canonical answer is a known platform constraint that's already documented.
+- **If Context Link returned nothing useful on a topic, say so honestly in the draft**
+  ("I want to double-check this on our side before answering definitively") rather
+  than filling the gap with guesses. A shorter, honest draft beats a longer
+  speculative one.
+- **Apply the lessons loaded in Step 0** for tone, structure, sign-off, anchor-text
+  style, and the recurring failure modes they call out.
+
+If the **draft-email-response** skill is available, you MAY delegate the actual
+prose generation to it — passing along the Context Link content you just retrieved
+in Phase 2a. But do NOT rely on draft-email-response to do the lookups itself: this
+skill is responsible for ensuring the lookups happen in Phase 2a, full stop. If
+draft-email-response runs its own `get-context` calls on top, that's additive, not
+a substitute. The point is that no non-trivial email reaches the drafting stage
+without canonical product context in hand.
+
+**If draft-email-response is not available**, draft inline using the rules above
+plus any lessons loaded in Step 0. Fall back to the placeholder format only as a
+last resort:
 
 ```
 Subject: Re: {original_subject}
@@ -280,20 +353,27 @@ Both environments use the exact same HTML file — no build step, no dependencie
 - If a specific draft fails to create, log the error, skip it, and continue with the rest. Report failures at the end.
 - If the email provider connection fails (e.g. Gmail MCP not connected, Zoho MCP not connected), give the user clear instructions on how to fix it. For Zoho, direct them to [zoho.com/mcp](https://www.zoho.com/mcp/) to set up the connector.
 - If artifact rendering fails for any reason, fall back to plain text chat output.
+- If a Context Link query in Phase 2a returns empty or errors out for a non-trivial
+  email, do NOT fall back to internal knowledge. Either re-phrase the query and try
+  once more, or proceed to draft with an explicit "I want to double-check this on our
+  side" hedge so the user can see the gap and either fill it in or rewrite.
 
 ---
 
 ## Dependencies
 
-This skill relies on two other skills:
+This skill relies on the following other skills:
 
-- **draft-email-response** — Generates context-aware draft replies (Step 2).
-  Located in the same plugin at `skills/draft-email-response/`. If not available,
-  the skill falls back to placeholder `[REPLY NEEDED]` drafts.
-- **get-context** — Retrieves internal knowledge from Context Link. Used by
-  draft-email-response to look up product docs, support history, and policies.
-  If not available, draft-email-response can still generate replies but without
-  internal context.
+- **get-context** — Retrieves internal knowledge from Context Link via a simple
+  WebFetch GET against a known slug. Used in Step 0 (lessons) and Step 2 (per-email
+  product context). If not available, the skill degrades gracefully but the user
+  must be told that drafts may be missing canonical product framing.
+- **ask-question** — Semantic search across the whole Context Link knowledge base.
+  Preferred over `get-context` in Phase 2a when the right slug is unknown.
+- **draft-email-response** — Optional. Generates context-aware draft replies given
+  Context Link content already in hand. If not available, this skill drafts inline
+  using the lessons + Context Link content directly. Located in the same plugin at
+  `skills/draft-email-response/`.
 - **update-memory** — Saves lessons learned from the user's email edits to the
   `customer-support-email-lessons` namespace on Context Link. If not available
   and the user is not using Claude memory fallback, the lesson-learning step is
@@ -329,6 +409,9 @@ For options A and B:
 
 1. **Formulate concise, actionable lessons.** One or two sentences each. Can cover
    tone, facts, preferred phrasing, when to request access, what to cut, etc.
+   When a factual correction surfaces, also consider whether the underlying topic
+   deserves its own dedicated Context Link slug — if so, flag that to the user and
+   offer to create it.
 
 2. **Save the lessons.** How you save depends on the knowledge mode:
 
@@ -361,5 +444,13 @@ For options A and B:
 - The `[REPLY NEEDED]` tag is a convention — the user can customise it.
 - Do NOT use sub-agents (Agent tool) anywhere in this skill. All work runs inline.
   Sub-agents cannot reliably access WebFetch or MCP tools in Cowork scheduled tasks.
-- Context Link calls use the **get-context** skill, which does a simple WebFetch GET
-  request. Never use browser navigation (Chrome) for Context Link — it's just a URL fetch.
+- Context Link calls use the **get-context** skill (or **ask-question** for semantic
+  search), which do simple WebFetch requests. Never use browser navigation (Chrome)
+  for Context Link — it's just a URL fetch.
+- **Per-email Context Link lookup is non-negotiable for non-trivial emails.** Loading
+  the lessons file in Step 0 does NOT substitute for it — lessons are meta-rules
+  about how to reply, not the product knowledge itself. If you find yourself about
+  to write a confident paragraph about charging, refunds, fulfilment, Shopify
+  compatibility, pricing, or any other product mechanic without having run a
+  Context Link query for that specific topic in this triage run, stop and run the
+  query first.
